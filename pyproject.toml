@@ -11,7 +11,7 @@ authors = [
 
 dependencies = [
     # Core scientific libraries
-    "numpy>=2.3.0",
+    "numpy>=1.26.4",
     "scipy>=1.15.3",
     "pandas>=2.3.0",
     "matplotlib>=3.10.0",
