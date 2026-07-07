@@ -1,0 +1,36 @@
+[project]
+name = "llama-cpp-container"
+version = "1.0.0-rc1"
+description = "HPC local LLM development environment using llama.cpp"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Tomoki Ueda" }
+]
+
+dependencies = [
+    # Core scientific libraries
+    "numpy>=2.3.0",
+    "scipy>=1.16.0",
+    "pandas>=2.3.0",
+    "matplotlib>=3.10.0",
+
+    # Molecular Dynamics
+    "MDAnalysis>=2.9.0",
+    "mdtraj>=1.11.0",
+
+    # Notebook / Interactive
+    "ipython>=9.0.0",
+    "jupyterlab>=4.4.0",
+
+    # LLM utilities
+    "huggingface-hub>=0.34.0",
+    "openai>=1.97.0",
+
+    # Coding assistant
+    "aider-chat>=0.86.0",
+]
+
+[tool.uv]
+package = false
