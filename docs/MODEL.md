@@ -18,8 +18,8 @@ Example:
 
 ```text
 $HOME/models/
-├── Qwen4-Coder-32B-Instruct-Q5_K_M.gguf
-├── Qwen3-Coder-14B-Instruct-Q5_K_M.gguf
+├── Qwen2.5-Coder-32B-Instruct-Q5_K_M.gguf
+├── Qwen2.5-Coder-14B-Instruct-Q5_K_M.gguf
 └── DeepSeek-Coder-V2-Lite-Q5_K_M.gguf
 ```
 
