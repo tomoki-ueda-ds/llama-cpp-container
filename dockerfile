@@ -3,15 +3,15 @@ FROM nvidia/cuda:12.8.1-devel-ubuntu24.04
 ARG DEBIAN_FRONTEND=noninteractive
 ARG LLAMA_CPP_REF=b9911
 
-ENV UV_LINK_MODE=copy
 ENV PATH="/root/.local/bin:${PATH}"
+ENV UV_LINK_MODE=copy
 
 # ----------------------------------------------------------------------
 # System packages
 # ----------------------------------------------------------------------
 
 RUN apt-get update && \
-    apt-get install -y \
+    apt-get install -y --no-install-recommends \
         git \
         curl \
         ca-certificates \
@@ -23,12 +23,12 @@ RUN apt-get update && \
         python3 \
         python3-pip \
         python3-venv \
-        tmux \
-        vim && \
+        vim \
+        tmux && \
     rm -rf /var/lib/apt/lists/*
 
 # ----------------------------------------------------------------------
-# uv
+# Install uv
 # ----------------------------------------------------------------------
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -45,7 +45,7 @@ COPY uv.lock .
 RUN uv sync --frozen
 
 # ----------------------------------------------------------------------
-# Build llama.cpp
+# Build llama.cpp (official build procedure)
 # ----------------------------------------------------------------------
 
 WORKDIR /opt
@@ -57,20 +57,28 @@ WORKDIR /opt/llama.cpp
 RUN git checkout ${LLAMA_CPP_REF}
 
 RUN cmake -B build \
-    -G Ninja \
+    -DGGML_NATIVE=OFF \
+    -DGGML_CUDA=ON \
+    -DGGML_BACKEND_DL=ON \
+    -DGGML_CPU_ALL_VARIANTS=ON \
+    -DLLAMA_BUILD_TESTS=OFF \
     -DCMAKE_BUILD_TYPE=Release \
-    -DGGML_CUDA=ON
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--allow-shlib-undefined"
 
 RUN cmake --build build -j"$(nproc)"
 
-RUN cmake --install build --prefix /usr/local
-
 # ----------------------------------------------------------------------
-# PATH
+# Install runtime exactly like official image
 # ----------------------------------------------------------------------
 
-ENV PATH="/usr/local/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
+RUN mkdir -p /app/bin /app/lib
+
+RUN find build -name "*.so*" -exec cp -P {} /app/lib \;
+
+RUN cp build/bin/* /app/bin/
+
+ENV PATH="/app/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/app/lib:${LD_LIBRARY_PATH}"
 
 # ----------------------------------------------------------------------
 # Workspace
@@ -78,8 +86,8 @@ ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
 
 WORKDIR /workspace
 
-COPY scripts/ /workspace/scripts/
 COPY config/ /workspace/config/
+COPY scripts/ /workspace/scripts/
 
 RUN chmod +x /workspace/scripts/*.sh
 
