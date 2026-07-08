@@ -5,6 +5,7 @@ ARG LLAMA_CPP_REF=b9911
 
 ENV PATH="/root/.local/bin:${PATH}"
 ENV UV_LINK_MODE=copy
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 
 # ----------------------------------------------------------------------
 # System packages
@@ -77,7 +78,7 @@ RUN find build -name "*.so*" -exec cp -P {} /app/lib \;
 
 RUN cp build/bin/* /app/bin/
 
-ENV PATH="/app/bin:${PATH}"
+ENV PATH="/opt/venv/bin:/app/bin:/root/.local/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/app/lib:${LD_LIBRARY_PATH}"
 
 # ----------------------------------------------------------------------
