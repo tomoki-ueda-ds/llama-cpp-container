@@ -39,4 +39,5 @@ COPY config/ /workspace/config/
 
 WORKDIR /workspace
 
+ENTRYPOINT []
 CMD ["/bin/bash"]
