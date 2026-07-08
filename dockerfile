@@ -1,7 +1,7 @@
 FROM nvidia/cuda:12.8.1-devel-ubuntu24.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG LLAMA_CPP_COMMIT=master
+ARG LLAMA_CPP_REF=b9911
 
 ENV UV_LINK_MODE=copy
 ENV PATH="/root/.local/bin:${PATH}"
@@ -54,7 +54,7 @@ RUN git clone https://github.com/ggml-org/llama.cpp.git
 
 WORKDIR /opt/llama.cpp
 
-RUN git checkout ${LLAMA_CPP_COMMIT}
+RUN git checkout ${LLAMA_CPP_REF}
 
 RUN cmake -B build \
     -G Ninja \
