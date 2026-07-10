@@ -1,221 +1,282 @@
 # llama-cpp-container
-A reproducible HPC container for local LLM-assisted scientific computing using **llama.cpp**, designed for **Slurm-managed NVIDIA DGX H100** environments.
 
-This project provides a container image that combines:
+Container image for running **llama.cpp** on NVIDIA GPUs in HPC environments using **Apptainer/Singularity** and **Slurm**.
 
-- **llama.cpp (`llama-server`)**
-- **GGUF models**
-- **Python 3.12**
-- **uv**
-- **aider**
-- Scientific Python libraries for molecular dynamics analysis
+This project provides:
 
-The container is built with Docker, published to GitHub Container Registry (GHCR), and executed on HPC systems using Apptainer.
+* CUDA-enabled `llama.cpp`
+* Python environment managed by `uv`
+* `aider` for AI-assisted development
+* Ready-to-use startup scripts
+* GitHub Actions for automatic container builds
 
 ---
 
 # Features
 
-- Official `llama.cpp` CUDA container as the base image
-- Optimized for NVIDIA H100
-- OpenAI-compatible API via `llama-server`
-- GGUF models stored outside the container
-- Python environment managed with `uv`
-- Preinstalled scientific libraries
-    - NumPy
-    - SciPy
-    - Pandas
-    - Matplotlib
-    - MDAnalysis
-    - MDTraj
-- Preinstalled `aider`
-- Designed for Slurm interactive and batch jobs
-- Container image distributed through GHCR
+* Ubuntu 24.04 + CUDA 12.8
+* `llama.cpp` built from a fixed Git commit
+* GPU support enabled (`GGML_CUDA=ON`)
+* Python environment managed with `uv`
+* `aider` pre-installed
+* Designed for Apptainer/Singularity
+* Designed for Slurm-based HPC systems
 
 ---
 
-# Repository Structure
+# Repository Layout
 
-```text
-llama-cpp-container/
+```
+.
+├── config/
+│   ├── llama-server.conf
+│   └── model.conf
+│
+├── scripts/
+│   ├── run-server.sh
+│   ├── run-aider.sh
+│   ├── run-slurm.sh
+│   ├── run-interactive.sh
+│   └── start-server.sh
 │
 ├── Dockerfile
 ├── pyproject.toml
 ├── uv.lock
-├── .dockerignore
-├── README.md
-│
-├── config/
-│   └── llama-server.conf
-│
-├── scripts/
-│   ├── start-server.sh
-│   ├── run-interactive.sh
-│   ├── run-slurm.sh
-│   ├── download-model.sh
-│   └── healthcheck.sh
-│
-├── docs/
-│   ├── INSTALL.md
-│   ├── HPC.md
-│   ├── MODEL.md
-│   └── AIDER.md
-│
-└── .github/
-    └── workflows/
-        ├── build.yml
-        └── release.yml
+└── README.md
 ```
-
----
-
-# Requirements
-
-## Local Development
-
-- Docker Engine
-- Git
-- GitHub account
-- GitHub Container Registry (GHCR)
-
-## HPC Environment
-
-- NVIDIA H100 GPU
-- Slurm
-- Apptainer
-- CUDA-compatible NVIDIA driver
 
 ---
 
 # Build
 
-Clone the repository.
-
-```bash
-git clone https://github.com/<YOUR_ACCOUNT>/llama-cpp-container.git
-cd llama-cpp-container
-```
-
-Build the image.
+Build locally.
 
 ```bash
 docker build -t llama-cpp-container .
 ```
 
----
+GitHub Actions automatically builds and publishes
 
-# Publish to GHCR
-
-After authentication,
-
-```bash
-docker tag llama-cpp-container ghcr.io/<YOUR_ACCOUNT>/llama-cpp-container:latest
-
-docker push ghcr.io/<YOUR_ACCOUNT>/llama-cpp-container:latest
+```
+ghcr.io/<user>/llama-cpp-container:latest
 ```
 
-GitHub Actions can also publish automatically.
+after every push to the main branch.
 
 ---
 
-# Convert to Apptainer
-
-On the HPC system,
+# Download as Apptainer Image
 
 ```bash
 apptainer pull \
-    llama-cpp-container.sif \
-    docker://ghcr.io/<YOUR_ACCOUNT>/llama-cpp-container:latest
+    llama-cpp-container_latest.sif \
+    docker://ghcr.io/<user>/llama-cpp-container:latest
 ```
 
 ---
 
 # Model Directory
 
-GGUF models are intentionally stored outside the container.
-
-Recommended location:
-
-```text
-$HOME/models/
-```
+Models are **not included** in the container.
 
 Example:
 
-```text
+```
 $HOME/models/
-└── qwen2.5-coder-32b-instruct-q5_k_m.gguf
+└── Qwen3.6-35B-A3B/
+    └── Qwen3.6-35B-A3B-Q8_0.gguf
+```
+
+When starting the container, bind the directory:
+
+```bash
+apptainer shell \
+    --nv \
+    --bind $HOME/models:/models \
+    llama-cpp-container_latest.sif
+```
+
+Inside the container the model becomes available as
+
+```
+/models/Qwen3.6-35B-A3B/Qwen3.6-35B-A3B-Q8_0.gguf
 ```
 
 ---
 
-# Starting llama-server
+# Configuration
+
+## llama-server.conf
+
+`config/llama-server.conf` stores common runtime options.
 
 Example:
 
-```bash
-llama-server \
-    -m /models/qwen2.5-coder-32b-instruct-q5_k_m.gguf \
-    --host 0.0.0.0 \
-    --port 8000 \
-    --ctx-size 32768 \
-    --flash-attn \
-    -ngl 99
+```
+--ctx-size 32768
+-ngl 999
+--flash-attn auto
+--batch-size 2048
+--ubatch-size 512
+--threads -1
 ```
 
-The server exposes an OpenAI-compatible API.
+The model path is **not** specified here.
 
 ---
 
-# Using aider
+## model.conf
 
-Set the OpenAI-compatible endpoint.
+`config/model.conf` stores the default model path.
 
-```bash
-export OPENAI_API_BASE=http://localhost:8000/v1
-export OPENAI_API_KEY=dummy
+Example:
+
+```
+MODEL=/models/Qwen3.6-35B-A3B/Qwen3.6-35B-A3B-Q8_0.gguf
 ```
 
-Launch aider.
+---
 
-```bash
-aider
+# Scripts
+
+## run-server.sh
+
+Starts `llama-server` using the model specified in `model.conf`.
+
 ```
+run-server.sh
+        │
+        ▼
+start-server.sh
+        │
+        ▼
+llama-server
+```
+
+This is the script users should normally execute.
+
+---
+
+## start-server.sh
+
+Low-level launcher.
+
+Reads `llama-server.conf` and starts `llama-server`.
+
+Normally called from other scripts.
+
+---
+
+## run-aider.sh
+
+Starts `aider` configured to use the local `llama-server`.
+
+Environment variables are configured automatically.
+
+---
+
+## run-slurm.sh
+
+Convenience wrapper intended for execution inside Slurm jobs.
+
+Prints job information before starting the server.
+
+---
+
+## run-interactive.sh
+
+Displays environment information.
+
+Checks:
+
+* Python
+* llama-server
+* aider
+* mounted model directory
+
+before opening an interactive shell.
 
 ---
 
 # Typical Workflow
 
-1. Obtain an interactive Slurm session.
-2. Start the container with Apptainer.
-3. Launch `llama-server`.
-4. Connect `aider`.
-5. Develop Python or Bash scripts interactively.
-6. Execute the generated scripts on the HPC system.
+## 1. Obtain GPU allocation
+
+```bash
+srun ...
+```
 
 ---
 
-# Intended Use
+## 2. Start the container
 
-This project is intended for:
+```bash
+apptainer shell \
+    --nv \
+    --bind $HOME/models:/models \
+    llama-cpp-container_latest.sif
+```
 
-- Molecular dynamics trajectory analysis
-- Scientific Python development
-- Bash scripting
-- Code generation
-- Code review
-- Data analysis
-- Interactive research support
+---
+
+## 3. Move to the workspace
+
+```bash
+cd /workspace
+```
+
+---
+
+## 4. Start llama-server
+
+```bash
+./scripts/run-server.sh
+```
+
+---
+
+## 5. Open another terminal on the same compute node
+
+```bash
+apptainer shell \
+    --nv \
+    --bind $HOME/models:/models \
+    llama-cpp-container_latest.sif
+
+cd /workspace
+
+./scripts/run-aider.sh
+```
+
+---
+
+# Manual Start
+
+The server can also be started directly.
+
+```bash
+llama-server \
+    -m /models/Qwen3.6-35B-A3B/Qwen3.6-35B-A3B-Q8_0.gguf \
+    --ctx-size 32768 \
+    -ngl 999 \
+    --flash-attn auto
+```
+
+---
+
+# Requirements
+
+* NVIDIA GPU
+* CUDA driver compatible with CUDA 12.8
+* Apptainer/Singularity
+* Slurm (optional)
 
 ---
 
 # License
 
-This repository is released under the MIT License.
+Please refer to the licenses of the individual projects:
 
-Please refer to the licenses of each bundled dependency, including:
-
-- llama.cpp
-- aider
-- MDAnalysis
-- MDTraj
+* llama.cpp
+* aider
+* uv

@@ -2,58 +2,37 @@
 
 set -euo pipefail
 
-###############################################################################
-# run-interactive.sh
-#
-# Interactive development environment for llama.cpp container.
-#
-# Usage:
-#
-#   ./scripts/run-interactive.sh
-#
-###############################################################################
-
-echo "============================================================"
+echo "=============================================="
 echo "llama-cpp-container"
-echo "Interactive Development Environment"
-echo "============================================================"
+echo "=============================================="
 
 echo
-echo "Python:"
 python3 --version
 
 echo
-echo "llama-server:"
 llama-server --version || true
 
 echo
-echo "aider:"
 aider --version || true
 
 echo
-echo "Working directory:"
-pwd
+echo "Available models"
 
-echo
-echo "Available models:"
-if [ -d "/models" ]; then
-    find /models -maxdepth 1 -name "*.gguf" -printf "  %f\n"
+if [[ -d /models ]]; then
+    find /models -type f -name "*.gguf"
 else
-    echo "  /models is not mounted."
+    echo "/models is not mounted."
 fi
 
 echo
-echo "Useful commands:"
+echo "Commands"
+
 echo
-echo "  Start llama-server"
-echo "    ./scripts/start-server.sh /models/<model>.gguf"
+echo "  ./scripts/run-server.sh"
+
 echo
-echo "  Start aider"
-echo "    export OPENAI_API_BASE=http://localhost:8000/v1"
-echo "    export OPENAI_API_KEY=dummy"
-echo "    aider"
-echo
-echo "============================================================"
+echo "  ./scripts/run-aider.sh"
+
 echo
 
 exec /bin/bash

@@ -6,12 +6,6 @@ set -euo pipefail
 # start-server.sh
 #
 # Launch llama-server using the shared configuration file.
-#
-# Example:
-#
-#   ./scripts/start-server.sh \
-#       /models/qwen2.5-coder-32b-instruct-q5_k_m.gguf
-#
 ###############################################################################
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -43,9 +37,20 @@ echo "============================================================"
 echo "Model : ${MODEL_PATH}"
 echo "Config: ${CONFIG_FILE}"
 echo "Host  : 0.0.0.0"
-echo "Port  : 8000"
+echo "Port  : 18000"
 echo "============================================================"
+
+ARGS=()
+
+while IFS= read -r line; do
+    # Skip comments and blank lines
+    [[ -z "${line}" ]] && continue
+    [[ "${line}" =~ ^[[:space:]]*# ]] && continue
+
+    read -ra words <<< "${line}"
+    ARGS+=("${words[@]}")
+done < "${CONFIG_FILE}"
 
 exec llama-server \
     -m "${MODEL_PATH}" \
-    $(grep -v '^[[:space:]]*#' "${CONFIG_FILE}" | grep -v '^[[:space:]]*$')
+    "${ARGS[@]}"

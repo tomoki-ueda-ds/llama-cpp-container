@@ -14,12 +14,12 @@ set -euo pipefail
 # Optional environment variables:
 #
 #   HOST=localhost
-#   PORT=8000
+#   PORT=18000
 #
 ###############################################################################
 
 HOST="${HOST:-localhost}"
-PORT="${PORT:-8000}"
+PORT="${PORT:-18000}"
 
 BASE_URL="http://${HOST}:${PORT}"
 
