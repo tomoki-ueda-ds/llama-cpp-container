@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 CONFIG_FILE="${HOME}/.config/llama-cpp-container/model.conf"
 
 if [[ ! -f "${CONFIG_FILE}" ]]; then
@@ -16,26 +14,27 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
     echo "Create it with:"
     echo
     echo "  mkdir -p ~/.config/llama-cpp-container"
-    echo "  cp ${SCRIPT_DIR}/../config/model.conf.example \\"
+    echo "  cp /workspace/config/model.conf.example \\"
     echo "     ~/.config/llama-cpp-container/model.conf"
-    echo
-    echo "Then edit the configuration file."
     echo
     exit 1
 fi
 
-# Load user configuration
 # shellcheck disable=SC1090
 source "${CONFIG_FILE}"
 
 export OPENAI_API_BASE
 export OPENAI_API_KEY
 
+mkdir -p "${HOME}/.local/share/open-webui"
+
 echo "=============================================="
-echo "Starting aider"
+echo "Starting Open WebUI"
 echo "=============================================="
-echo "API Base : ${OPENAI_API_BASE}"
-echo "Model    : ${MODEL}"
+echo "WebUI : http://${OPENWEBUI_HOST}:${OPENWEBUI_PORT}"
+echo "LLM   : ${OPENAI_API_BASE}"
 echo
 
-exec aider "$@"
+exec open-webui serve \
+    --host "${OPENWEBUI_HOST}" \
+    --port "${OPENWEBUI_PORT}"
