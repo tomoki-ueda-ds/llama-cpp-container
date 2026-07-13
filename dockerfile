@@ -46,10 +46,12 @@ COPY uv.lock .
 RUN uv sync --frozen
 
 # ----------------------------------------------------------------------
-# Install Open WebUI
+# Open WebUI (separate virtual environment)
 # ----------------------------------------------------------------------
 
-RUN uv pip install open-webui
+RUN python3 -m venv /opt/open-webui && \
+    /opt/open-webui/bin/pip install --upgrade pip && \
+    /opt/open-webui/bin/pip install open-webui
 
 # ----------------------------------------------------------------------
 # Build llama.cpp (official build procedure)
