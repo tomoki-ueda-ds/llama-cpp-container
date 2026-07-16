@@ -10,10 +10,24 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
     exit 1
 fi
 
+# shellcheck disable=SC1090
 source "${CONFIG_FILE}"
 
-export DATA_DIR=/app/backend/data
+export DATA_DIR="${HOME}/.local/share/open-webui"
 
-exec /opt/open-webui/bin/open-webui serve \
+export OPENAI_API_BASE
+export OPENAI_API_KEY
+
+mkdir -p "${DATA_DIR}"
+
+echo "=============================================="
+echo "Starting Open WebUI"
+echo "=============================================="
+echo "Host : ${OPENWEBUI_HOST}"
+echo "Port : ${OPENWEBUI_PORT}"
+echo "Data : ${DATA_DIR}"
+echo
+
+exec open-webui serve \
     --host "${OPENWEBUI_HOST}" \
     --port "${OPENWEBUI_PORT}"

@@ -19,6 +19,12 @@
 #
 MODEL=/models/<MODEL_DIRECTORY>/<MODEL_NAME>.gguf
 
+# OpenAI API model name
+MODEL_ALIAS=qwen3.6-35b-a3b
+
+# aider model
+AIDER_MODEL=openai/${MODEL_ALIAS}
+
 ###############################################################################
 # Compute node
 ###############################################################################

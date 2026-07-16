@@ -24,13 +24,16 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
     exit 1
 fi
 
-# Load user configuration
 # shellcheck disable=SC1090
 source "${CONFIG_FILE}"
 
 if [[ -z "${MODEL:-}" ]]; then
-    echo
     echo "ERROR: MODEL is not defined in ${CONFIG_FILE}"
+    exit 1
+fi
+
+if [[ -z "${MODEL_ALIAS:-}" ]]; then
+    echo "ERROR: MODEL_ALIAS is not defined in ${CONFIG_FILE}"
     exit 1
 fi
 
@@ -45,8 +48,11 @@ echo "============================================================"
 echo "Starting llama-server"
 echo "============================================================"
 echo "Model : ${MODEL}"
+echo "Alias : ${MODEL_ALIAS}"
 echo "Config: ${CONFIG_FILE}"
 echo "============================================================"
 echo
 
-exec "${SCRIPT_DIR}/start-server.sh" "${MODEL}"
+exec "${SCRIPT_DIR}/start-server.sh" \
+    "${MODEL}" \
+    "${MODEL_ALIAS}"

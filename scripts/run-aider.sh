@@ -24,9 +24,14 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
     exit 1
 fi
 
-# Load user configuration
 # shellcheck disable=SC1090
 source "${CONFIG_FILE}"
+
+if [[ -z "${AIDER_MODEL:-}" ]]; then
+    echo
+    echo "ERROR: AIDER_MODEL is not defined in ${CONFIG_FILE}"
+    exit 1
+fi
 
 export OPENAI_API_BASE
 export OPENAI_API_KEY
@@ -35,7 +40,9 @@ echo "=============================================="
 echo "Starting aider"
 echo "=============================================="
 echo "API Base : ${OPENAI_API_BASE}"
-echo "Model    : ${MODEL}"
+echo "Model    : ${AIDER_MODEL}"
 echo
 
-exec aider "$@"
+exec aider \
+    --model "${AIDER_MODEL}" \
+    "$@"
