@@ -35,7 +35,7 @@ RUN apt-get update && \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # ----------------------------------------------------------------------
-# Python environment
+# Python environment (aider, MDAnalysis, etc.)
 # ----------------------------------------------------------------------
 
 WORKDIR /opt/llm-dev
@@ -46,15 +46,7 @@ COPY uv.lock .
 RUN uv sync --frozen
 
 # ----------------------------------------------------------------------
-# Open WebUI (separate virtual environment)
-# ----------------------------------------------------------------------
-
-RUN python3 -m venv /opt/open-webui && \
-    /opt/open-webui/bin/pip install --upgrade pip && \
-    /opt/open-webui/bin/pip install open-webui
-
-# ----------------------------------------------------------------------
-# Build llama.cpp (official build procedure)
+# Build llama.cpp
 # ----------------------------------------------------------------------
 
 WORKDIR /opt
@@ -77,7 +69,7 @@ RUN cmake -B build \
 RUN cmake --build build -j"$(nproc)"
 
 # ----------------------------------------------------------------------
-# Install runtime exactly like official image
+# Install llama.cpp runtime
 # ----------------------------------------------------------------------
 
 RUN mkdir -p /app/bin /app/lib
@@ -85,6 +77,18 @@ RUN mkdir -p /app/bin /app/lib
 RUN find build -name "*.so*" -exec cp -P {} /app/lib \;
 
 RUN cp build/bin/* /app/bin/
+
+# ----------------------------------------------------------------------
+# Open WebUI (separate virtual environment)
+# ----------------------------------------------------------------------
+
+RUN python3 -m venv /opt/open-webui && \
+    /opt/open-webui/bin/python -m pip install --upgrade pip && \
+    /opt/open-webui/bin/python -m pip install --no-cache-dir open-webui
+
+# ----------------------------------------------------------------------
+# Runtime environment
+# ----------------------------------------------------------------------
 
 ENV PATH="/opt/venv/bin:/app/bin:/root/.local/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/app/lib:${LD_LIBRARY_PATH}"
