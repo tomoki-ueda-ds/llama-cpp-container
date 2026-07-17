@@ -90,7 +90,7 @@ RUN python3 -m venv /opt/open-webui && \
 # Runtime environment
 # ----------------------------------------------------------------------
 
-ENV PATH="/opt/venv/bin:/app/bin:/root/.local/bin:${PATH}"
+ENV PATH="/opt/open-webui/bin:/opt/venv/bin:/app/bin:/root/.local/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/app/lib:${LD_LIBRARY_PATH}"
 
 # ----------------------------------------------------------------------
